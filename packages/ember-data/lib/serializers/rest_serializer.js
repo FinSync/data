@@ -264,6 +264,7 @@ export default JSONSerializer.extend({
   extractSingle: function(store, primaryType, rawPayload, recordId) {
     var payload = this.normalizePayload(rawPayload);
     var primaryTypeName = primaryType.typeKey;
+    var primarySerializer = store.serializerFor(primaryType);
     var primaryRecord;
 
     for (var prop in payload) {
@@ -298,12 +299,16 @@ export default JSONSerializer.extend({
         if (isFirstCreatedRecord || isUpdatedRecord) {
           primaryRecord = hash;
         } else {
-          store.push(typeName, hash);
+          this.storePush(store, typeName, hash, primarySerializer);
         }
       }, this);
     }
 
     return primaryRecord;
+  },
+
+  storePush: function(store, typeName, hash, primarySerializer) {
+    store.push(typeName, hash);
   },
 
   /**

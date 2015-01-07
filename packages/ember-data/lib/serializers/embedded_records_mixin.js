@@ -113,12 +113,78 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
     return extractEmbeddedRecords(this, this.store, type, normalizedHash);
   },
 
+  storePush: function(store, typeName, hash, primarySerializer) {
+    if (!primarySerializer) {
+      store.push(typeName, hash);
+    }
+
+    var clientId = hash[primarySerializer.clientIdKey];
+    var clientRecord = primarySerializer.clientIdMap[clientId];
+
+    // if embedded hash contains client id, mimic a createRecord/save
+    if (clientRecord) {
+      clientRecord.adapterDidCommit(hash);
+      store.didSaveRecord(clientRecord, hash);
+      delete primarySerializer.clientIdMap[clientId];
+    } else {
+      var record = store.getById(typeName, hash.id);
+      if (record && !record.get('isEmpty')) {
+        store.didSaveRecord(record, hash);
+      } else {
+        store.push(typeName, hash);
+      }
+    }
+  },
+
   keyForRelationship: function(key, type){
     if (this.hasDeserializeRecordsOption(key)) {
       return this.keyForAttribute(key);
     } else {
       return this._super(key, type) || key;
     }
+  },
+
+  /**
+    The property to use when serializing a client id.
+
+    @property clientIdKey
+    @type [String]
+   */
+  clientIdKey: '_clientId',
+
+  /**
+    Map of client ids, these temporary ids used when saving new embedded records.
+
+    They will be reconciled upon loading embedded records. Once a client id has been
+    reconciled with a record that has been given a real id, the clientIdMap
+    entry will be deleted
+
+    @property clientIdMap
+    @type {Object}
+   */
+  clientIdMap: Ember.computed(function () {
+    return {};
+  }),
+
+  /**
+    Needed because the Ember.computed above does not work (??)
+   */
+  init: function () {
+    this._super();
+    this.clientIdMap = {};
+  },
+
+  /**
+    Return a unique Client id
+
+    @property createClientId
+    @type [String]
+   */
+  createClientId: function (record) {
+    var guid = Ember.guidFor(record);
+
+    this.clientIdMap[guid] = record;
+    return guid;
   },
 
   /**
@@ -297,7 +363,14 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
       key = this.keyForAttribute(attr);
       json[key] = get(record, attr).map(function(embeddedRecord) {
         var serializedEmbeddedRecord = embeddedRecord.serialize({includeId: true});
+        var clientIdKey = this.clientIdKey;
         this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
+        if (serializedEmbeddedRecord['id'] == null) {
+          serializedEmbeddedRecord[clientIdKey] = this.createClientId(embeddedRecord);
+        }
+        embeddedRecord._inFlightAttributes = embeddedRecord._attributes;
+        embeddedRecord._attributes = {};
+        embeddedRecord.send('willCommit');
         return serializedEmbeddedRecord;
       }, this);
     }
@@ -385,7 +458,7 @@ function extractEmbeddedRecords(serializer, store, type, partial) {
     if (serializer.hasDeserializeRecordsOption(key)) {
       var embeddedType = store.modelFor(relationship.type.typeKey);
       if (relationship.kind === "hasMany") {
-        extractEmbeddedHasMany(store, key, embeddedType, partial);
+        extractEmbeddedHasMany(store, key, embeddedType, partial, serializer);
       }
       if (relationship.kind === "belongsTo") {
         extractEmbeddedBelongsTo(store, key, embeddedType, partial);
@@ -397,7 +470,7 @@ function extractEmbeddedRecords(serializer, store, type, partial) {
 }
 
 // handles embedding for `hasMany` relationship
-function extractEmbeddedHasMany(store, key, embeddedType, hash) {
+function extractEmbeddedHasMany(store, key, embeddedType, hash, parentSerializer) {
   if (!hash[key]) {
     return hash;
   }
@@ -407,7 +480,7 @@ function extractEmbeddedHasMany(store, key, embeddedType, hash) {
   var embeddedSerializer = store.serializerFor(embeddedType.typeKey);
   forEach(hash[key], function(data) {
     var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
-    store.push(embeddedType, embeddedRecord);
+    embeddedSerializer.storePush(store, embeddedType, embeddedRecord, parentSerializer);
     ids.push(embeddedRecord.id);
   });
 
