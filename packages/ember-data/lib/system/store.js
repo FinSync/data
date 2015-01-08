@@ -673,14 +673,27 @@ Store = Ember.Object.extend({
     @param {String|Integer} id
     @return {DS.Model} record
   */
-  recordForId: function(typeName, inputId) {
+  recordForId: function(typeName, inputId, clientId) {
     var type = this.modelFor(typeName);
     var id = coerceId(inputId);
     var idToRecord = this.typeMapFor(type).idToRecord;
+    var recordList = this.typeMapFor(type).records;
     var record = idToRecord[id];
 
     if (!record || !idToRecord[id]) {
-      record = this.buildRecord(type, id);
+      if (clientId != null) {
+        for (var i = 0; i < recordList.length; i++) {
+          if ((recordList[i].id == null) && (Ember.guidFor(recordList[i]) === clientId)) {
+            record = recordList[i];
+            record.id = inputId;
+            idToRecord[id] = record;
+          }
+        }
+      }
+
+      if (!record || !idToRecord[id]) {
+        record = this.buildRecord(type, id);
+      }
     }
 
     return record;
@@ -1190,7 +1203,7 @@ Store = Ember.Object.extend({
   */
   _load: function(type, data, partial) {
     var id = coerceId(data.id);
-    var record = this.recordForId(type, id);
+    var record = this.recordForId(type, id, data._clientId);
 
     record.setupData(data, partial);
     this.recordArrayManager.recordDidChange(record);
