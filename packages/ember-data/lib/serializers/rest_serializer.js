@@ -308,7 +308,7 @@ export default JSONSerializer.extend({
   },
 
   storePush: function(store, typeName, hash, primarySerializer) {
-    store.push(typeName, hash);
+    store.push(typeName, hash, null, primarySerializer.clientIdKey);
   },
 
   /**

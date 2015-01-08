@@ -682,7 +682,7 @@ Store = Ember.Object.extend({
 
     if (!record || !idToRecord[id]) {
       if (clientId != null) {
-        for (var i = 0; i < recordList.length; i++) {
+        for (var i = 0; !record && (i < recordList.length); i++) {
           if ((recordList[i].id == null) && (Ember.guidFor(recordList[i]) === clientId)) {
             record = recordList[i];
             record.id = inputId;
@@ -1192,6 +1192,22 @@ Store = Ember.Object.extend({
   // ................
 
   /**
+    This internal method is used by `_load`.
+
+    @method _clientId
+    @private
+    @param {Object} data
+    @param {String} clientId
+   */
+  _clientId: function(data, clientIdKey) {
+    if (clientIdKey != null) {
+      return data[clientIdKey];
+    } else {
+      return null;
+    }
+  },
+
+  /**
     This internal method is used by `push`.
 
     @method _load
@@ -1200,10 +1216,12 @@ Store = Ember.Object.extend({
     @param {Object} data
     @param {Boolean} partial the data should be merged into
       the existing data, not replace it.
+    @param {String} clientIdKey the parameter on data containing
+      clientId
   */
-  _load: function(type, data, partial) {
+  _load: function(type, data, partial, clientIdKey) {
     var id = coerceId(data.id);
-    var record = this.recordForId(type, id, data._clientId);
+    var record = this.recordForId(type, id, this._clientId(data, clientIdKey));
 
     record.setupData(data, partial);
     this.recordArrayManager.recordDidChange(record);
@@ -1302,10 +1320,13 @@ Store = Ember.Object.extend({
     @return {DS.Model} the record that was created or
       updated.
   */
-  push: function(typeName, data, _partial) {
+  push: function(typeName, data, _partial, _clientIdKey) {
     // _partial is an internal param used by `update`.
     // If passed, it means that the data should be
     // merged into the existing data, not replace it.
+    //
+    // _clientIdKey is an internal param indicating what
+    // parameter is used on data for clientId
 
     Ember.assert("You must include an `id` for " + typeName+ " in a hash passed to `push`", data.id != null);
 
@@ -1314,7 +1335,7 @@ Store = Ember.Object.extend({
     // normalize relationship IDs into records
     data = normalizeRelationships(this, type, data);
 
-    this._load(type, data, _partial);
+    this._load(type, data, _partial, _clientIdKey);
 
     return this.recordForId(type, data.id);
   },
