@@ -464,10 +464,10 @@ function extractEmbeddedRecords(serializer, store, type, partial) {
       var embeddedType = store.modelFor(relationship.type.typeKey);
       if (relationship.kind === "hasMany") {
         if (relationship.options.polymorphic) {
-          extractEmbeddedHasManyPolymorphic(store, key, partial);
+          extractEmbeddedHasManyPolymorphic(store, key, partial, serializer);
         }
         else {
-          extractEmbeddedHasMany(store, key, embeddedType, partial);
+          extractEmbeddedHasMany(store, key, embeddedType, partial, serializer);
         }
       }
       if (relationship.kind === "belongsTo") {
