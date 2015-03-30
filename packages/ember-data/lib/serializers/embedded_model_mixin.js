@@ -7,7 +7,7 @@ import {pluralize} from "ember-inflector";
 /**
   ## Using Embedded Records
 
-  `DS.EmbeddedRailsRecordsMixin` supports serializing embedded records.
+  `DS.EmbeddedModelMixin` supports serializing embedded records.
 
   To set up embedded records, include the mixin when extending a serializer
   then define and configure embedded (model) relationships.
@@ -15,7 +15,7 @@ import {pluralize} from "ember-inflector";
   Below is an example of a per-type serializer ('post' type).
 
   ```js
-  App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRailsRecordsMixin, {
+  App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedModelMixin, {
     attrs: {
       author: {embedded: 'always'},
       comments: {serialize: 'ids'}
@@ -40,14 +40,14 @@ import {pluralize} from "ember-inflector";
   In the case where embedded JSON is expected while extracting a payload (reading)
   the setting is `deserialize: 'records'`, there is no need to use `ids` when
   extracting as that is the default behavior without this mixin if you are using
-  the vanilla EmbeddedRailsRecordsMixin. Likewise, to embed JSON in the payload while
+  the vanilla EmbeddedModelMixin. Likewise, to embed JSON in the payload while
   serializing `serialize: 'records'` is the setting to use. There is an option of
   not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
   do not want the relationship sent at all, you can use `serialize: false`.
 
 
-  ### EmbeddedRailsRecordsMixin defaults
-  If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRailsRecordsMixin`
+  ### EmbeddedModelMixin defaults
+  If you do not overwrite `attrs` for a specific relationship, the `EmbeddedModelMixin`
   will behave in the following way:
 
   BelongsTo: `{serialize:'id', deserialize:'id'}`
@@ -72,14 +72,14 @@ import {pluralize} from "ember-inflector";
   to modify to fit your specific needs.**
 
   For example review the docs for each method of this mixin:
-  * [normalize](/api/data/classes/DS.EmbeddedRailsRecordsMixin.html#method_normalize)
-  * [serializeBelongsTo](/api/data/classes/DS.EmbeddedRailsRecordsMixin.html#method_serializeBelongsTo)
-  * [serializeHasMany](/api/data/classes/DS.EmbeddedRailsRecordsMixin.html#method_serializeHasMany)
+  * [normalize](/api/data/classes/DS.EmbeddedModelMixin.html#method_normalize)
+  * [serializeBelongsTo](/api/data/classes/DS.EmbeddedModelMixin.html#method_serializeBelongsTo)
+  * [serializeHasMany](/api/data/classes/DS.EmbeddedModelMixin.html#method_serializeHasMany)
 
-  @class EmbeddedRailsRecordsMixin
+  @class EmbeddedModelMixin
   @namespace DS
 */
-var EmbeddedRailsRecordsMixin = Ember.Mixin.create({
+var EmbeddedModelMixin = Ember.Mixin.create({
 
   /**
     Normalize the record and recursively normalize/extract all the embedded records
@@ -212,7 +212,7 @@ var EmbeddedRailsRecordsMixin = Ember.Mixin.create({
     Use a custom (type) serializer for the post model to configure embedded author
 
     ```js
-    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRailsRecordsMixin, {
+    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedModelMixin, {
       attrs: {
         author: {embedded: 'always'}
       }
@@ -290,7 +290,7 @@ var EmbeddedRailsRecordsMixin = Ember.Mixin.create({
     Use a custom (type) serializer for the post model to configure embedded comments
 
     ```js
-    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRailsRecordsMixin, {
+    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedModelMixin, {
       attrs: {
         comments: {embedded: 'always'}
       }
@@ -327,7 +327,7 @@ var EmbeddedRailsRecordsMixin = Ember.Mixin.create({
     To embed the `ids` for a related object (using a hasMany relationship):
 
     ```js
-    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRailsRecordsMixin, {
+    App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedModelMixin, {
       attrs: {
         comments: {serialize: 'ids', deserialize: 'records'}
       }
@@ -506,4 +506,4 @@ function extractEmbeddedBelongsTo(store, key, embeddedType, hash) {
   return hash;
 }
 
-export default EmbeddedRailsRecordsMixin;
+export default EmbeddedModelMixin;
