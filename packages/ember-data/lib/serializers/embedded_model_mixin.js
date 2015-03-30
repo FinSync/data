@@ -110,6 +110,7 @@ var EmbeddedModelMixin = Ember.Mixin.create({
   **/
   normalize: function(type, hash, prop) {
     var normalizedHash = this._super(type, hash, prop);
+    removeRemovedObjects(this, this.store);
     return extractEmbeddedRecords(this, this.store, type, normalizedHash);
   },
 
@@ -176,6 +177,7 @@ var EmbeddedModelMixin = Ember.Mixin.create({
   init: function () {
     this._super();
     this.clientIdMap = {};
+    this.embededToRemove = [];
   },
 
   /**
@@ -453,7 +455,15 @@ var EmbeddedModelMixin = Ember.Mixin.create({
     return attrs && (attrs[camelize(attr)] || attrs[attr]);
   }
 });
-
+function removeRemovedObjects(serializer, store){
+  if (serializer && serializer.embededToRemove){
+    forEach(serializer.embededToRemove, function(clientRecord) {
+      clientRecord.send('didCommit');
+      clientRecord.unloadRecord();
+    });
+    serializer.embededToRemove = [];
+  }
+}
 // chooses a relationship kind to branch which function is used to update payload
 // does not change payload if attr is not embedded
 function extractEmbeddedRecords(serializer, store, type, partial) {
