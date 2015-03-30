@@ -370,12 +370,17 @@ var EmbeddedModelMixin = Ember.Mixin.create({
       json[key] = get(record, attr).map(function(embeddedRecord) {
         var serializedEmbeddedRecord = embeddedRecord.serialize({includeId: true});
         this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
-        var clientIdKey = this.clientIdKey;
-        if (serializedEmbeddedRecord['id'] == null) {
-          serializedEmbeddedRecord[clientIdKey] = this.createClientId(embeddedRecord);
+        if (embeddedRecord.get('isDeleted')) {
+          serializedEmbeddedRecord['_destroy'] = true;
+          this.embededToRemove.push(embeddedRecord);
+        } else {
+          var clientIdKey = this.clientIdKey;
+          if (serializedEmbeddedRecord['id'] == null) {
+            serializedEmbeddedRecord[clientIdKey] = this.createClientId(embeddedRecord);
+          }
+          embeddedRecord._inFlightAttributes = embeddedRecord._attributes;
+          embeddedRecord._attributes = {};
         }
-        embeddedRecord._inFlightAttributes = embeddedRecord._attributes;
-        embeddedRecord._attributes = {};
         embeddedRecord.send('willCommit');
         return serializedEmbeddedRecord;
       }, this);
