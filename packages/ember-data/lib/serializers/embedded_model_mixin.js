@@ -369,8 +369,8 @@ var EmbeddedModelMixin = Ember.Mixin.create({
       key = this.keyForEmbeddedAttribute(attr);
       json[key] = get(record, attr).map(function(embeddedRecord) {
         var serializedEmbeddedRecord = embeddedRecord.serialize({includeId: true});
-        var clientIdKey = this.clientIdKey;
         this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
+        var clientIdKey = this.clientIdKey;
         if (serializedEmbeddedRecord['id'] == null) {
           serializedEmbeddedRecord[clientIdKey] = this.createClientId(embeddedRecord);
         }
