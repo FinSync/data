@@ -375,9 +375,6 @@ var EmbeddedRecordsMixin = Ember.Mixin.create({
         if (serializedEmbeddedRecord['id'] == null) {
           serializedEmbeddedRecord[clientIdKey] = this.createClientId(embeddedRecord);
         }
-        embeddedRecord._inFlightAttributes = embeddedRecord._attributes;
-        embeddedRecord._attributes = {};
-        embeddedRecord.send('willCommit');
         return serializedEmbeddedRecord;
       }, this);
     }
