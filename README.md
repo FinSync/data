@@ -1,3 +1,33 @@
+## Building Ember Data for the FINSYNC app
+
+Install Node 0.12.7 using your favorite node version manager, then run the following to install dependencies and build the JavaScript:
+
+
+```no-highlight
+git checkout client_id_1_0_beta_9_old
+```
+
+```no-highlight
+npm install -g bower
+```
+
+```no-highlight
+npm install
+```
+
+```no-highlight
+bower install
+```
+
+```no-highlight
+npm run dist
+```
+
+
+Copy dist/ember-data.js to app/assets/javascripts/vendor/ember-data.js
+
+
+
 ## Ember Data [![Build Status](https://secure.travis-ci.org/emberjs/data.svg?branch=master)](http://travis-ci.org/emberjs/data)
 
 Ember Data is a library for robustly managing model data in your
